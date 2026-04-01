@@ -21,7 +21,19 @@ private:
     map<string, string> symboltable;
 
     // other private methods
-    bool vdec();
+    bool vdec() {
+        if (tokitr != tokens.end() && *tokitr == "var") {
+            tokitr++; lexitr++;
+            if (vars() < 0) {
+                return false;
+            }
+            tokitr++; lexitr++;
+            while (tokitr != tokens.end() && (*tokitr == "integer" || *tokitr == "string")) {
+                tokitr++; lexitr++;
+            }
+        }
+        return true;
+    }
     int vars();
     bool stmtlist();
     int stmt();
@@ -42,10 +54,15 @@ public:
     SyntaxAnalyzer(istream& infile) {
         lexemes.clear();
         tokens.clear();
-        string lexeme, token;
-        while (infile >> lexeme >> token) {
-            lexemes.push_back(lexeme);
-            tokens.push_back(token);
+        string line;
+        while (getline(infile, line)) {
+            int first = line.find(' ');
+
+            string token = line.substr(0, first);
+            string lexeme = line.substr(first + 1);
+
+            lexemes.push_back(token);
+            tokens.push_back(lexeme);
         }
     }
     // pre: 1st parameter consists of an open file containing a source code's
@@ -54,13 +71,25 @@ public:
 
     bool parse() { // no true false not
         //no var
-        vdec();
-        if (tokitr != tokens.end() && *tokitr != "main") {
-            stmtlist();
+        tokitr = tokens.begin();
+        lexitr = lexemes.begin();
+        if (!vdec()) {
+            cout << "Error found at this lime: " << *tokitr << " " << *lexitr << endl;
+            return false;
         }
-
-        stmtlist();
-
+        if (tokitr != tokens.end() && *tokitr != "main") {
+            cout << "Error found at this lime: " << *tokitr << " " << *lexitr << endl;
+            return false;
+        }
+        if (!stmtlist()) {
+            cout << "Error found at this lime: " << *tokitr << " " << *lexitr << endl;
+            return false;
+        }
+        if (tokitr == tokens.end() && *tokitr == "end") {
+            return true;
+        }
+        cout << "Error found at this lime: " << *tokitr << " " << *lexitr << endl;
+        return false;
     }
     // pre: none
     // post: The lexemes/tokens have been parsed.
