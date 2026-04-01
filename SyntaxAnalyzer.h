@@ -27,10 +27,7 @@ private:
             if (vars() < 0) {
                 return false;
             }
-            tokitr++; lexitr++;
-            while (tokitr != tokens.end() && vars() == -1) {
-                tokitr++; lexitr++;
-            }
+            while (tokitr != tokens.end() && vars() == -1) {}
         } else {
             tokitr++; lexitr++;
             return true;
@@ -42,9 +39,7 @@ private:
     }
     bool stmtlist() {
         if (tokitr != tokens.end() && stmt()) {
-            tokitr++; lexitr++;
             while (tokitr != tokens.end() && stmt()) {
-                tokitr++; lexitr++;
             }
         } else {
            return true;
@@ -74,10 +69,30 @@ private:
         if (tokitr != tokens.end() && !stmtlist()) {
             return false;
         }
-
-        if (tokitr != tokens.end() && ) {}
+        if (tokitr != tokens.end() && !elsepart()) {
+            return false;
+        }
+        if (tokitr != tokens.end() && *tokitr != "end") {
+            return false;
+        }
+        tokitr++; lexitr++;
+        if (tokitr != tokens.end() && *tokitr != "if") {
+            return false;
+        }
+        tokitr++; lexitr++;
+        return true;
     }
-    bool elsepart();
+    bool elsepart() {
+        if (tokitr != tokens.end() && *tokitr == "else") {
+            tokitr++; lexitr++;
+            if (tokitr != tokens.end() && !stmtlist()) {
+                return false;
+            }
+        } else {
+            tokitr++; lexitr++;
+        }
+        return true;
+    }
     bool whilestmt();
     bool assignstmt();
     bool inputstmt();
