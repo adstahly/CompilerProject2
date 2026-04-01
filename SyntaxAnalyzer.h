@@ -28,16 +28,55 @@ private:
                 return false;
             }
             tokitr++; lexitr++;
-            while (tokitr != tokens.end() && (*tokitr == "integer" || *tokitr == "string")) {
+            while (tokitr != tokens.end() && vars() == -1) {
                 tokitr++; lexitr++;
             }
+        } else {
+            tokitr++; lexitr++;
+            return true;
         }
         return true;
     }
-    int vars();
-    bool stmtlist();
+    int vars() {
+
+    }
+    bool stmtlist() {
+        if (tokitr != tokens.end() && stmt()) {
+            tokitr++; lexitr++;
+            while (tokitr != tokens.end() && stmt()) {
+                tokitr++; lexitr++;
+            }
+        } else {
+           return true;
+        }
+    }
     int stmt();
-    bool ifstmt();
+    bool ifstmt() {
+        if (tokitr != tokens.end() && *tokitr != "if") {
+            return false;
+        }
+        tokitr++; lexitr++;
+        if (tokitr != tokens.end() && *tokitr != "(") {
+            return false;
+        }
+        tokitr++; lexitr++;
+        if (tokitr != tokens.end() && !expr()) {
+            return false;
+        }
+        if (tokitr != tokens.end() && *tokitr != ")") {
+            return false;
+        }
+        tokitr++; lexitr++;
+        if (tokitr != tokens.end() && *tokitr != "then") {
+            return false;
+        }
+        tokitr++; lexitr++;
+        if (tokitr != tokens.end() && !stmtlist()) {
+            return false;
+        }
+
+        if (tokitr != tokens.end() && ) {}
+    }
     bool elsepart();
     bool whilestmt();
     bool assignstmt();
