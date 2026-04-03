@@ -18,85 +18,38 @@ private:
         if (tokitr != tokens.end() && *tokitr == "var") {
             tokitr++;
             lexitr++;
-            int var;
-            var = vars();
-            return true;
+            if (tokitr != tokens.end() && vars()) {
+                while (tokitr != tokens.end() && vars()) {}
+            } else {
+                return false;
+            }
         }
-        return false;
+        return true;
     }
 
     bool vars() {
-        // includes type
-        string type;
-        bool error = false;
-        // TODO: continue statement with ','
-        while (tokitr != tokens.end() && (*tokitr == "t_integer" || *tokitr == "t_string") && !error) {
-            if (*lexitr == "t_integer") {
-                type = "integer";
-            } else {
-                type = "string";
-            }
-            tokitr++;
-            lexitr++;
-            while (tokitr != tokens.end() && *tokitr == "t_id") {
-                if (tokitr != tokens.end()) {
-                    if (symboltable.contains(*lexitr)) {
-                        if (symboltable[*lexitr] == type) {
-                            tokitr++;
-                            lexitr++;
-                        } else error = true;
-                    } else {
-                        symboltable[*lexitr] = type;
-                    }
-                } else error = true;
-            }
-        }
-        if (error) return false;
-        return true;
-    };
 
-    bool stmtlist();
+    }
+
+    bool stmtlist() {
+        if (tokitr != tokens.end() && stmt()) {
+            while (tokitr != tokens.end() && stmt()) {}
+        }
+        return true;
+    }
 
     bool stmt() {
-        // write
-        if (ifstmt()) return true;
-        if (whilestmt()) return true;
-        if (assignstmt()) return true;
-        if (inputstmt()) return true;
-        if (outputstmt()) return true;
-        return false;
+
     };
 
-    bool ifstmt();
+    bool ifstmt() {
+
+    }
 
     bool elsepart();
 
     bool whilestmt() {
-        // write
-        if (tokitr != tokens.end() && *lexitr == "while") {
-            tokitr++; lexitr++;
-            if (tokitr != tokens.end() && *lexitr == "(") {
-                tokitr++; lexitr++;
-                if (expr()) {
-                    if (tokitr != tokens.end() && *lexitr == ")") {
-                        tokitr++; lexitr++;
-                        if (tokitr != tokens.end() && *lexitr == "loop") {
-                            tokitr++; lexitr++;
-                            if (stmtlist()) {
-                                if (tokitr != tokens.end() && *lexitr == "end") {
-                                    tokitr++; lexitr++;
-                                    if (tokitr != tokens.end() && *lexitr == "loop") {
-                                        tokitr++; lexitr++;
-                                        return true;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return false;
+
     }
 
     bool assignstmt();
