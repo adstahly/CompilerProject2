@@ -32,13 +32,19 @@ private:
     }
 
     bool stmtlist() {
-        if (tokitr != tokens.end() && stmt()) {
-            while (tokitr != tokens.end() && stmt()) {}
+        if (tokitr != tokens.end()) {
+            int status = stmt();
+            while (tokitr != tokens.end() && status == 1) {
+                status = stmt();
+            }
+            if (status == -1) {
+                return false;
+            }
         }
         return true;
     }
 
-    bool stmt() {
+    int stmt() {
 
     };
 
@@ -85,53 +91,51 @@ private:
 
     bool assignstmt() {
         if (tokitr != tokens.end() && symboltable.contains(*lexitr)) {
-            string lex = *lexitr;
-            if (lex == "integer" || lex == "string") {
-                tokitr++; lexitr++;
-                if (tokitr != tokens.end() && *lexitr == "=") {
-                    tokitr++; lexitr++;
-                    if (tokitr != tokens.end() && lex == "integer") {
-                        arithexpr();
-                    } else if (tokitr != tokens.end() && lex == "integer") {
-                        strterm();
-                    } else
-                        return false;
-                    if (tokitr != tokens.end() && *lexitr == ";") {
-                        tokitr++; lexitr++;
-                        return true;
-                    }
+            string type = symboltable[*lexitr];
+            tokitr++;
+            lexitr++;
+            if (tokitr != tokens.end() && *lexitr == "=") {
+                tokitr++;
+                lexitr++;
+                if (tokitr != tokens.end() && type == "integer") {
+                    if (!arithexpr()) return false;
+                } else if (tokitr != tokens.end() && type == "string") {
+                    if (!strterm()) return false;
+                }
+                if (tokitr != tokens.end() && *lexitr == ";") {
+                    tokitr++;
+                    lexitr++;
+                    return true;
                 }
             }
         }
         return false;
     }
 
-    bool inputstmt(){ // write
-        if (tokitr != tokens.end() && *lexitr == "input") {
-            tokitr++; lexitr++;
-            if (tokitr != tokens.end() && *lexitr == "(") {
-                tokitr++; lexitr++;
-                if (tokitr != tokens.end() && symboltable.contains(*lexitr)) {
-                    tokitr++; lexitr++;
-                    if (tokitr != tokens.end() && *lexitr == ")") {
-                        tokitr++; lexitr++;
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
-    };
+    bool inputstmt();
+
     bool outputstmt() {
         if (tokitr != tokens.end() && *lexitr == "output") {
-            tokitr++; lexitr++;
+            tokitr++;
+            lexitr++;
             if (tokitr != tokens.end() && *lexitr == "(") {
-                tokitr++; lexitr++;
-                if (tokitr != tokens.end() && numterm() != strterm()) {
-                    if (tokitr != tokens.end() && *lexitr == ")") {
-                        tokitr++; lexitr++;
-                        return true;
+                tokitr++;
+                lexitr++;
+
+                auto bookmark = tokitr;
+
+                if (tokitr != tokens.end() && numterm()) {
+                } else {
+                    tokitr = bookmark;
+                    lexitr = bookmark;
+                    if (!strterm()) {
+                        return false;
                     }
+                }
+                if (tokitr != tokens.end() && *lexitr == ")") {
+                    tokitr++;
+                    lexitr++;
+                    return true;
                 }
             }
         }
@@ -175,7 +179,11 @@ private:
     bool strterm();
 
     bool logicop() {
-        if (tokitr != tokens.end() && *lexitr == "and") {}
+        if (tokitr != tokens.end() && (*lexitr == "and" || *lexitr == "or")) {
+            tokitr++; lexitr++;
+            return true;
+        }
+        return false;
     }
 
     bool arithop(){ // write
@@ -254,7 +262,7 @@ public:
                 }
             }
         }
-        cout << "error: " << *lexitr << " " << *tokitr << endl;
+        cout << "Error at Line: " << *lexitr << " " << *tokitr << endl;
         return false;
     };
 };
