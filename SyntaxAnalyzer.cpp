@@ -87,7 +87,26 @@ private:
     }
 
     bool assignstmt() {
-        if (tokitr != tokens.end() && symboltable.contains(*lexitr)) {}
+        if (tokitr != tokens.end() && symboltable.contains(*lexitr)) {
+            string lex = *lexitr;
+            if (lex == "integer" || lex == "string") {
+                tokitr++; lexitr++;
+                if (tokitr != tokens.end() && *lexitr == "=") {
+                    tokitr++; lexitr++;
+                    if (tokitr != tokens.end() && lex == "integer") {
+                        arithexpr();
+                    } else if (tokitr != tokens.end() && lex == "integer") {
+                        strterm();
+                    } else
+                        return false;
+                    if (tokitr != tokens.end() && *lexitr == ";") {
+                        tokitr++; lexitr++;
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     bool inputstmt(){ // write
@@ -107,6 +126,8 @@ private:
         return false;
     };
     bool outputstmt();
+
+    bool arithexpr();
 
     bool expr();
 
