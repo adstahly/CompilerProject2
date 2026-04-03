@@ -71,9 +71,6 @@ private:
         return false;
     }
 
-    bool logexpr() {
-
-    }
     bool elsepart() {
         if (tokitr != tokens.end() && *lexitr == "else") {
             tokitr++; lexitr++;
@@ -125,13 +122,37 @@ private:
         }
         return false;
     };
-    bool outputstmt();
+    bool outputstmt() {
+        if (tokitr != tokens.end() && *lexitr == "output") {
+            tokitr++; lexitr++;
+            if (tokitr != tokens.end() && *lexitr == "(") {
+                tokitr++; lexitr++;
+                if (tokitr != tokens.end() && numterm() != strterm()) {
+                    if (tokitr != tokens.end() && *lexitr == ")") {
+                        tokitr++; lexitr++;
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
 
     bool arithexpr();
 
-    bool expr();
+    bool logexpr() {
+        if (tokitr != tokens.end() && relexpr()) {
+            while (tokitr != tokens.end() && logicop()) {
+                if (tokitr != tokens.end() && !relexpr()) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
 
-    bool simpleexpr();
+    bool relexpr();
 
     bool numterm() { // write
         if (tokitr != tokens.end()) {
@@ -153,7 +174,9 @@ private:
     };
     bool strterm();
 
-    bool logicop();
+    bool logicop() {
+        if (tokitr != tokens.end() && *lexitr == "and") {}
+    }
 
     bool arithop(){ // write
         if (tokitr != tokens.end()) {
