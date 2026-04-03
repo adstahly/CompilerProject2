@@ -15,7 +15,7 @@ private:
 
     // other private methods
     bool vdec() {
-        if (tokitr != tokens.end() && *tokitr == "var") {
+        if (tokitr != tokens.end() && *lexitr == "var") {
             tokitr++;
             lexitr++;
             if (tokitr != tokens.end() && vars()) {
@@ -43,16 +43,52 @@ private:
     };
 
     bool ifstmt() {
-
+        if (tokitr != tokens.end() && *lexitr == "if") {
+            tokitr++; lexitr++;
+            if (tokitr != tokens.end() && *lexitr == "(") {
+                tokitr++; lexitr++;
+                if (tokitr != tokens.end() && logexpr()) {
+                    if (tokitr != tokens.end() && *lexitr == ")") {
+                        tokitr++; lexitr++;
+                        if (tokitr != tokens.end() && *lexitr == "then") {
+                            tokitr++; lexitr++;
+                            if (tokitr != tokens.end() && stmtlist()) {
+                                if (tokitr != tokens.end() && elsepart()) {
+                                    if (tokitr != tokens.end() && *lexitr == "end") {
+                                        tokitr++; lexitr++;
+                                        if (tokitr != tokens.end() && *lexitr == "if") {
+                                            tokitr++; lexitr++;
+                                            return true;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return false;
     }
 
-    bool elsepart();
+    bool logexpr() {
+
+    }
+    bool elsepart() {
+        if (tokitr != tokens.end() && *lexitr == "else") {
+            tokitr++; lexitr++;
+            if (tokitr != tokens.end() && stmtlist()) {} else {return false;}
+        }
+        return true;
+    }
 
     bool whilestmt() {
 
     }
 
-    bool assignstmt();
+    bool assignstmt() {
+        if (tokitr != tokens.end() && symboltable.contains(*lexitr)) {}
+    }
 
     bool inputstmt(){ // write
         if (tokitr != tokens.end() && *lexitr == "input") {
