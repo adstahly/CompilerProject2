@@ -15,7 +15,13 @@ private:
     map<string, string> symboltable;
 
     // other private methods
+    string current_token() {
+        if (tokitr != tokens.end()) return *tokitr;
+        return "EOF (End of File)";
+    }
+
     bool vdec() {
+        cout << "[TRACE] Entering vdec(). Looking at: " << current_token() << endl;
         if (tokitr != tokens.end() && *tokitr == "t_var") {
             tokitr++;
             lexitr++;
@@ -25,12 +31,16 @@ private:
                 return false;
             }
         }
+        cout << "[TRACE] vdec() finished (Epsilon path). Moving on." << endl;
         return true;
     }
 
     bool stmtlist() {
-        if (tokitr != tokens.end()) {
+        cout << "[TRACE] Entering stmtlist(). Looking at: " << current_token() << endl;
+        if (tokitr != tokens.end() && *tokitr != "t_end") {
             int status = stmt();
+            cout << "[TRACE] Returned from first stmt(). Lookahead is now: " << current_token() << endl;
+
             while (tokitr != tokens.end() && status == 1) {
                 status = stmt();
             }
@@ -214,6 +224,8 @@ private:
         return "";
     }
     int stmt() {
+        cout << "[TRACE] Entering stmt() STUB. Consuming: " << current_token() << endl;
+        if (*tokitr == "t_if") return ifstmt() ? 1 : -1;
         tokitr++; lexitr++;
         return 1;
     }
@@ -271,33 +283,48 @@ public:
 
 
     bool parse() {
-        // pre: none
-        // post: The lexemes/tokens have been parsed.
-        // If an error occurs, a message prints indicating the token/lexeme pair
-        // that caused the error.
-        // If no error, vectors contain syntactically correct source code
-
-        // sentence structure -> VDEC main STMTLIST end
         tokitr = tokens.begin();
         lexitr = lexemes.begin();
+
+        cout << "[TRACE] Starting parse(). First token: " << current_token() << endl;
+
         if (vdec()) {
-            // check for main
+            cout << "[TRACE] Returned to parse() after vdec(). Looking for t_main. Current: " << current_token() << endl;
 
             if (tokitr != tokens.end() && *tokitr == "t_main") {
                 tokitr++;
                 lexitr++;
+                cout << "[TRACE] Found t_main. Consumed it. Calling stmtlist(). Current: " << current_token() << endl;
+
                 if (stmtlist()) {
-                    // check for end
-                    if (tokitr == tokens.end() && *tokitr == "t_end") {
-                        for (auto const& [id, type] : symboltable) {
-                            cout << id << " " << type << endl;
+                    cout << "[TRACE] Returned to parse() after stmtlist(). Looking for t_end. Current: " << current_token() << endl;
+
+                    // NOTE: Added trace here to show the exact evaluation
+                    if (tokitr == tokens.end()) {
+                        cout << "[TRACE] WARNING: tokitr is at tokens.end() before checking for t_end!" << endl;
+                    }
+
+                    if (tokitr != tokens.end() && *tokitr == "t_end") {
+                        cout << "[TRACE] Found t_end! Printing symbol table." << endl;
+                        tokitr++; lexitr++;
+                        if (tokitr == tokens.end()) {
+                            for (auto const& [id, type] : symboltable) {
+                                cout << id << " " << type << endl;
+                            }
+                            return true;
                         }
-                        return true;
                     }
                 }
             }
         }
-        cout << "Error at Line: " << *lexitr << " " << *tokitr << endl;
+
+        // SAFELY print the error without dereferencing .end()
+        cout << "\n[ERROR] Syntax parsing failed." << endl;
+        if (tokitr != tokens.end()) {
+            cout << "Error at Line: " << *lexitr << " " << *tokitr << endl;
+        } else {
+            cout << "Error triggered at the End of File (Iterators are out of bounds)." << endl;
+        }
         return false;
     };
 };
