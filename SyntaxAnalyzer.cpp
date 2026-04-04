@@ -20,15 +20,13 @@ private:
             tokitr++;
             lexitr++;
             if (tokitr != tokens.end() && vars()) {
-                while (tokitr != tokens.end() && vars()) {}
+                //while (tokitr != tokens.end() && vars()) {}
             } else {
                 return false;
             }
         }
         return true;
     }
-
-    bool vars();
 
     bool stmtlist() {
         if (tokitr != tokens.end()) {
@@ -43,9 +41,7 @@ private:
         return true;
     }
 
-    int stmt() {
 
-    };
 
     bool ifstmt() {
         if (tokitr != tokens.end() && *tokitr == "t_if") {
@@ -84,7 +80,7 @@ private:
         return true;
     }
 
-    bool whilestmt();
+
 
     bool assignstmt() {
         if (tokitr != tokens.end() && symboltable.contains(*lexitr)) {
@@ -109,7 +105,7 @@ private:
         return false;
     }
 
-    bool inputstmt();
+
 
     bool outputstmt() {
         if (tokitr != tokens.end() && *tokitr == "t_output") {
@@ -139,7 +135,7 @@ private:
         return false;
     }
 
-    bool arithexpr();
+
 
     bool logexpr() {
         if (tokitr != tokens.end() && relexpr()) {
@@ -153,7 +149,7 @@ private:
         return false;
     }
 
-    bool relexpr();
+
 
     bool numterm() { // write
         if (tokitr != tokens.end()) {
@@ -174,7 +170,7 @@ private:
         }
         return false;
     }
-    bool strterm();
+
 
     bool logicop() {
         if (tokitr != tokens.end() && (*tokitr == "t_and" || *tokitr == "t_or")) {
@@ -183,9 +179,72 @@ private:
         }
         return false;
     }
+    bool vars() {
+        string varType = type();
+        if (tokitr != tokens.end() && !varType.empty()) {
+            if (tokitr != tokens.end() && *tokitr == "t_id") {
+                symboltable[*lexitr] = varType;
+                tokitr++; lexitr++;
+                while (tokitr != tokens.end() && *tokitr == "s_comma") {
+                    tokitr++; lexitr++;
+                    if (tokitr != tokens.end() && *tokitr == "t_id") {
+                        if (!symboltable.contains(*lexitr)) {
+                            symboltable[*lexitr] = *tokitr;
+                            tokitr++; lexitr++;
+                        } else {
+                            return false;
+                        }
+                    }
+                }
+                if (tokitr != tokens.end() && *tokitr == "t_semi") {
+                    tokitr++; lexitr++;
+                    return true;
+                }
 
-    bool arithop();
-    bool relop();
+            }
+        }
+        return false;
+    }
+    string type() {
+        if (tokitr != tokens.end() && (*tokitr == "t_integer" || *tokitr == "t_string")) {
+            string type = *tokitr;
+            tokitr++; lexitr++;
+            return type;
+        }
+        return "";
+    }
+    int stmt() {
+        tokitr++; lexitr++;
+        return 1;
+    }
+    bool whilestmt() {
+        tokitr++; lexitr++;
+        return true;
+    }
+    bool inputstmt() {
+        tokitr++; lexitr++;
+        return true;
+    }
+    bool arithexpr() {
+        tokitr++; lexitr++;
+        return true;
+    }
+    bool relexpr() {
+        tokitr++; lexitr++;
+        return true;
+    }
+    bool strterm() {
+        tokitr++; lexitr++;
+        return true;
+    }
+    bool arithop() {
+        tokitr++; lexitr++;
+        return true;
+    }
+    bool relop() {
+        tokitr++; lexitr++;
+        return true;
+    }
 
 public:
     SyntaxAnalyzer(istream &infile) {
@@ -219,8 +278,11 @@ public:
         // If no error, vectors contain syntactically correct source code
 
         // sentence structure -> VDEC main STMTLIST end
+        tokitr = tokens.begin();
+        lexitr = lexemes.begin();
         if (vdec()) {
             // check for main
+
             if (tokitr != tokens.end() && *tokitr == "t_main") {
                 tokitr++;
                 lexitr++;
@@ -241,6 +303,7 @@ public:
 };
 
 int main() {
+
     ifstream infile("input.txt");
     if (!infile) {
         cout << "Error opening file" << endl;
@@ -252,6 +315,5 @@ int main() {
     if (syntax_analyzer.parse()) {
         cout << "Input is Valid" << endl;
     }
-
     return 0;
 }
