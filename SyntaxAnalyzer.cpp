@@ -26,7 +26,7 @@ private:
             tokitr++;
             lexitr++;
             if (tokitr != tokens.end() && vars()) {
-                //while (tokitr != tokens.end() && vars()) {}
+                while (tokitr != tokens.end() && vars()) {}
             } else {
                 return false;
             }
@@ -90,62 +90,108 @@ private:
         return true;
     }
 
-
-
     bool assignstmt() {
-        if (tokitr != tokens.end() && symboltable.contains(*lexitr)) {
-            string type = symboltable[*lexitr];
+    cout << "[TRACE] Entering assignstmt(). Current lexeme: " << *lexitr << endl;
+
+    if (tokitr != tokens.end() && symboltable.contains(*lexitr)) {
+        string storedType = symboltable[*lexitr];
+        cout << "[TRACE] ID found in Symbol Table: " << *lexitr << " | Stored Type: " << storedType << endl;
+
+        tokitr++;
+        lexitr++;
+
+        if (tokitr != tokens.end() && *tokitr == "s_assign") {
+            cout << "[TRACE] Found assignment operator (=). Moving to expression." << endl;
             tokitr++;
             lexitr++;
-            if (tokitr != tokens.end() && *tokitr == "s_assign") {
-                tokitr++;
-                lexitr++;
-                if (tokitr != tokens.end() && type == "t_integer") {
-                    if (!arithexpr()) return false;
-                } else if (tokitr != tokens.end() && type == "t_string") {
-                    if (!strterm()) return false;
-                }
-                if (tokitr != tokens.end() && *tokitr == "s_semi") {
-                    tokitr++;
-                    lexitr++;
-                    return true;
+
+            // --- THE TYPE CHECKING LOGIC ---
+            if (storedType == "t_integer") {
+                cout << "[TRACE] Path: Integer. Calling arithexpr()." << endl;
+                if (!arithexpr()) {
+                    cout << "[ERROR] arithexpr() failed for integer assignment." << endl;
+                    return false;
                 }
             }
+            else if (storedType == "t_string") {
+                cout << "[TRACE] Path: String. Calling strterm()." << endl;
+                if (!strterm()) {
+                    cout << "[ERROR] strterm() failed for string assignment." << endl;
+                    return false;
+                }
+            }
+            else {
+                cout << "[ERROR] Unknown type '" << storedType << "' found in symbol table for " << *prev(lexitr, 2) << endl;
+                return false;
+            }
+
+            // --- THE SEMICOLON CHECK ---
+            if (tokitr != tokens.end() && *tokitr == "s_semi") {
+                cout << "[TRACE] Semicolon found. Assignment Statement SUCCESS." << endl;
+                tokitr++;
+                lexitr++;
+                return true;
+            } else {
+                string found = (tokitr != tokens.end()) ? *tokitr : "EOF";
+                cout << "[ERROR] Missing semicolon after assignment. Found: " << found << endl;
+            }
+        } else {
+            cout << "[ERROR] Expected '=' after identifier " << *prev(lexitr) << endl;
         }
-        return false;
+    } else {
+        cout << "[ERROR] Identifier '" << *lexitr << "' not found in Symbol Table (Undeclared variable)." << endl;
     }
-
-
+    return false;
+}
 
     bool outputstmt() {
+        cout << "[TRACE] Entering outputstmt(). Current token: " << *tokitr << endl;
+
         if (tokitr != tokens.end() && *tokitr == "t_output") {
             tokitr++;
             lexitr++;
+
             if (tokitr != tokens.end() && *tokitr == "s_lparen") {
+                cout << "[TRACE] Found '('. Checking for expression or string." << endl;
                 tokitr++;
                 lexitr++;
 
-                auto bookmark = tokitr;
+                // Bookmark the start of the content
+                auto bookmarkTok = tokitr;
+                auto bookmarkLex = lexitr;
 
+                cout << "[TRACE] Attempting Path A: numterm()..." << endl;
                 if (tokitr != tokens.end() && numterm()) {
-                } else {
-                    tokitr = bookmark;
-                    lexitr = bookmark;
-                    if (!strterm()) {
+                    cout << "[TRACE] Path A (numterm) SUCCESS." << endl;
+                }
+                else {
+                    // BACKTRACK
+                    cout << "[TRACE] Path A FAILED. Resetting iterators to try Path B: strterm()." << endl;
+                    tokitr = bookmarkTok;
+                    lexitr = bookmarkLex;
+
+                    if (tokitr != tokens.end() && strterm()) {
+                        cout << "[TRACE] Path B (strterm) SUCCESS." << endl;
+                    } else {
+                        cout << "[ERROR] outputstmt FAILED: Neither numterm nor strterm matched content." << endl;
                         return false;
                     }
                 }
+
+                // Check for the closing parenthesis
                 if (tokitr != tokens.end() && *tokitr == "s_rparen") {
+                    cout << "[TRACE] Found ')'. outputstmt() is VALID." << endl;
                     tokitr++;
                     lexitr++;
                     return true;
+                } else {
+                    string found = (tokitr != tokens.end()) ? *tokitr : "EOF";
+                    cout << "[ERROR] outputstmt expected ')', but found: " << found << endl;
                 }
             }
         }
         return false;
     }
-
-
 
     bool logexpr() {
         if (tokitr != tokens.end() && relexpr()) {
@@ -199,7 +245,7 @@ private:
                     tokitr++; lexitr++;
                     if (tokitr != tokens.end() && *tokitr == "t_id") {
                         if (!symboltable.contains(*lexitr)) {
-                            symboltable[*lexitr] = *tokitr;
+                            symboltable[*lexitr] = varType;
                             tokitr++; lexitr++;
                         } else {
                             return false;
@@ -226,8 +272,11 @@ private:
     int stmt() {
         cout << "[TRACE] Entering stmt() STUB. Consuming: " << current_token() << endl;
         if (*tokitr == "t_if") return ifstmt() ? 1 : -1;
-        tokitr++; lexitr++;
-        return 1;
+        if (*tokitr == "t_while") return whilestmt() ? 1 : -1;
+        if (*tokitr == "t_id") return assignstmt() ? 1 : -1;
+        if (*tokitr == "t_input") return inputstmt() ? 1 : -1;
+        if (*tokitr == "t_output") return outputstmt() ? 1 : -1;
+        return 0;
     }
     bool whilestmt() {
         tokitr++; lexitr++;
