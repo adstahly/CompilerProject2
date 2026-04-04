@@ -43,9 +43,7 @@ private:
         return true;
     }
 
-    int stmt() {
-
-    };
+    int stmt();
 
     bool ifstmt() {
         if (tokitr != tokens.end() && *tokitr == "t_if") {
