@@ -1,6 +1,7 @@
 #include <iostream>
 #include <map>
 #include <vector>
+#include <fstream>
 using namespace std;
 
 class SyntaxAnalyzer {
@@ -15,7 +16,7 @@ private:
 
     // other private methods
     bool vdec() {
-        if (tokitr != tokens.end() && *lexitr == "var") {
+        if (tokitr != tokens.end() && *tokitr == "t_var") {
             tokitr++;
             lexitr++;
             if (tokitr != tokens.end() && vars()) {
@@ -49,20 +50,20 @@ private:
     };
 
     bool ifstmt() {
-        if (tokitr != tokens.end() && *lexitr == "if") {
+        if (tokitr != tokens.end() && *tokitr == "t_if") {
             tokitr++; lexitr++;
-            if (tokitr != tokens.end() && *lexitr == "(") {
+            if (tokitr != tokens.end() && *tokitr == "s_lparen") {
                 tokitr++; lexitr++;
                 if (tokitr != tokens.end() && logexpr()) {
-                    if (tokitr != tokens.end() && *lexitr == ")") {
+                    if (tokitr != tokens.end() && *tokitr == "s_rparen") {
                         tokitr++; lexitr++;
-                        if (tokitr != tokens.end() && *lexitr == "then") {
+                        if (tokitr != tokens.end() && *tokitr == "t_then") {
                             tokitr++; lexitr++;
                             if (tokitr != tokens.end() && stmtlist()) {
                                 if (tokitr != tokens.end() && elsepart()) {
-                                    if (tokitr != tokens.end() && *lexitr == "end") {
+                                    if (tokitr != tokens.end() && *tokitr == "t_end") {
                                         tokitr++; lexitr++;
-                                        if (tokitr != tokens.end() && *lexitr == "if") {
+                                        if (tokitr != tokens.end() && *tokitr == "t_if") {
                                             tokitr++; lexitr++;
                                             return true;
                                         }
@@ -78,7 +79,7 @@ private:
     }
 
     bool elsepart() {
-        if (tokitr != tokens.end() && *lexitr == "else") {
+        if (tokitr != tokens.end() && *tokitr == "t_else") {
             tokitr++; lexitr++;
             if (tokitr != tokens.end() && stmtlist()) {} else {return false;}
         }
@@ -94,15 +95,15 @@ private:
             string type = symboltable[*lexitr];
             tokitr++;
             lexitr++;
-            if (tokitr != tokens.end() && *lexitr == "=") {
+            if (tokitr != tokens.end() && *tokitr == "s_assign") {
                 tokitr++;
                 lexitr++;
-                if (tokitr != tokens.end() && type == "integer") {
+                if (tokitr != tokens.end() && type == "t_integer") {
                     if (!arithexpr()) return false;
-                } else if (tokitr != tokens.end() && type == "string") {
+                } else if (tokitr != tokens.end() && type == "t_string") {
                     if (!strterm()) return false;
                 }
-                if (tokitr != tokens.end() && *lexitr == ";") {
+                if (tokitr != tokens.end() && *tokitr == "s_semi") {
                     tokitr++;
                     lexitr++;
                     return true;
@@ -115,10 +116,10 @@ private:
     bool inputstmt();
 
     bool outputstmt() {
-        if (tokitr != tokens.end() && *lexitr == "output") {
+        if (tokitr != tokens.end() && *tokitr == "t_output") {
             tokitr++;
             lexitr++;
-            if (tokitr != tokens.end() && *lexitr == "(") {
+            if (tokitr != tokens.end() && *tokitr == "s_lparen") {
                 tokitr++;
                 lexitr++;
 
@@ -132,7 +133,7 @@ private:
                         return false;
                     }
                 }
-                if (tokitr != tokens.end() && *lexitr == ")") {
+                if (tokitr != tokens.end() && *tokitr == "s_rparen") {
                     tokitr++;
                     lexitr++;
                     return true;
@@ -168,53 +169,27 @@ private:
             }
             string num = *lexitr;
             for (int i = 0; i < num.length(); i++) {
-                if (!isalpha(num[i])) {
+                if (!isdigit(num[i])) {
                     return false;
                 }
             }
+            tokitr++; lexitr++;
             return true;
         }
         return false;
-    };
+    }
     bool strterm();
 
     bool logicop() {
-        if (tokitr != tokens.end() && (*lexitr == "and" || *lexitr == "or")) {
+        if (tokitr != tokens.end() && (*tokitr == "t_and" || *tokitr == "t_or")) {
             tokitr++; lexitr++;
             return true;
         }
         return false;
     }
 
-    bool arithop(){ // write
-        if (tokitr != tokens.end()) {
-            string lex = *lexitr;
-            if (lex == ">" || lex == "<") {
-                tokitr++; lexitr++;
-                if (tokitr != tokens.end() && *lexitr == "=") {
-                    tokitr++; lexitr++;
-                }
-                return true;
-            }
-            if (lex == "!" || lex == "=") {
-                tokitr++; lexitr++;
-                if (tokitr != tokens.end() && *lexitr == "=") {
-                    tokitr++; lexitr++;
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-    bool relop() {// write
-        if (tokitr != tokens.end()) {
-            string lex = *lexitr;
-            if (lex == "+" || lex == "-" || lex == "*" || lex == "/" || lex == "%") {
-                return true;
-            }
-            return false;
-        }
-    };
+    bool arithop();
+    bool relop();
 
 public:
     SyntaxAnalyzer(istream &infile) {
@@ -250,15 +225,18 @@ public:
         // sentence structure -> VDEC main STMTLIST end
         if (vdec()) {
             // check for main
-            if (tokitr != tokens.end() && *tokitr == "main") {
+            if (tokitr != tokens.end() && *tokitr == "t_main") {
                 tokitr++;
                 lexitr++;
                 if (stmtlist()) {
                     // check for end
-                    if (tokitr == tokens.end() && *tokitr == "end") {
+                    if (tokitr == tokens.end() && *tokitr == "t_end") {
+                        lexitr->begin();
+                        for (int i = 0; i < symboltable.size(); i++) {
+                            cout << symboltable[*lexitr] << endl;
+                        }
                         return true;
                     }
-                    return true;
                 }
             }
         }
@@ -266,3 +244,20 @@ public:
         return false;
     };
 };
+
+int main() {
+    ifstream infile("input.txt");
+    if (!infile) {
+        cout << "Error opening file" << endl;
+        return 1;
+    }
+
+    SyntaxAnalyzer syntax_analyzer(infile);
+
+    if (syntax_analyzer.parse()) {
+        cout << "Input is Valid" << endl;
+    }
+
+
+    return 0;
+}
