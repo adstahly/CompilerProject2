@@ -28,9 +28,7 @@ private:
         return true;
     }
 
-    bool vars() {
-
-    }
+    bool vars();
 
     bool stmtlist() {
         if (tokitr != tokens.end()) {
@@ -86,9 +84,7 @@ private:
         return true;
     }
 
-    bool whilestmt() {
-
-    }
+    bool whilestmt();
 
     bool assignstmt() {
         if (tokitr != tokens.end() && symboltable.contains(*lexitr)) {
@@ -231,9 +227,8 @@ public:
                 if (stmtlist()) {
                     // check for end
                     if (tokitr == tokens.end() && *tokitr == "t_end") {
-                        lexitr->begin();
-                        for (int i = 0; i < symboltable.size(); i++) {
-                            cout << symboltable[*lexitr] << endl;
+                        for (auto const& [id, type] : symboltable) {
+                            cout << id << " " << type << endl;
                         }
                         return true;
                     }
@@ -257,7 +252,6 @@ int main() {
     if (syntax_analyzer.parse()) {
         cout << "Input is Valid" << endl;
     }
-
 
     return 0;
 }
