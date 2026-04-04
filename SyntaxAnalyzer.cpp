@@ -283,8 +283,22 @@ private:
         return true;
     }
     bool inputstmt() {
-        tokitr++; lexitr++;
-        return true;
+        if (tokitr != tokens.end() && *tokitr == "t_input") {
+            tokitr++; lexitr++;
+            if (tokitr != tokens.end() && *tokitr == "s_lparen") {
+                tokitr++; lexitr++;
+                if (tokitr != tokens.end() && *tokitr == "t_id") {
+                    if (symboltable.contains(*lexitr)) {
+                        tokitr++; lexitr++;
+                        if (tokitr != tokens.end() && *tokitr == "s_rparen") {
+                            tokitr++; lexitr++;
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
     }
     bool arithexpr() {
         tokitr++; lexitr++;
