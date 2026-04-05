@@ -157,8 +157,7 @@ private:
                 lexitr++;
 
                 // Bookmark the start of the content
-                auto bookmarkTok = tokitr;
-                auto bookmarkLex = lexitr;
+                auto bookmark= tokitr;
 
                 cout << "[TRACE] Attempting Path A: numterm()..." << endl;
                 if (tokitr != tokens.end() && numterm()) {
@@ -167,8 +166,8 @@ private:
                 else {
                     // BACKTRACK
                     cout << "[TRACE] Path A FAILED. Resetting iterators to try Path B: strterm()." << endl;
-                    tokitr = bookmarkTok;
-                    lexitr = bookmarkLex;
+                    tokitr = bookmark;
+                    lexitr = bookmark;
 
                     if (tokitr != tokens.end() && strterm()) {
                         cout << "[TRACE] Path B (strterm) SUCCESS." << endl;
