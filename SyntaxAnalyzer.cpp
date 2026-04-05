@@ -28,7 +28,9 @@ private:
         return true;
     }
 
-    bool vars();
+    bool vars() {
+        return false;
+    }
 
     bool stmtlist() {
         if (tokitr != tokens.end()) {
@@ -43,7 +45,9 @@ private:
         return true;
     }
 
-    int stmt();
+    int stmt() {
+        return 0;
+    }
 
     bool ifstmt() {
         if (tokitr != tokens.end() && *tokitr == "t_if") {
@@ -82,7 +86,9 @@ private:
         return true;
     }
 
-    bool whilestmt();
+    bool whilestmt() {
+        return true;
+    }
 
     bool assignstmt() {
         if (tokitr != tokens.end() && symboltable.contains(*lexitr)) {
@@ -107,7 +113,9 @@ private:
         return false;
     }
 
-    bool inputstmt();
+    bool inputstmt() {
+        return true;
+    }
 
     bool outputstmt() {
         if (tokitr != tokens.end() && *tokitr == "t_output") {
@@ -137,7 +145,9 @@ private:
         return false;
     }
 
-    bool arithexpr();
+    bool arithexpr() {
+        return true;
+    }
 
     bool logexpr() {
         if (tokitr != tokens.end() && relexpr()) {
@@ -151,7 +161,9 @@ private:
         return false;
     }
 
-    bool relexpr();
+    bool relexpr() {
+        return true;
+    }
 
     bool numterm() { // write
         if (tokitr != tokens.end()) {
@@ -172,7 +184,9 @@ private:
         }
         return false;
     }
-    bool strterm();
+    bool strterm() {
+        return true;
+    }
 
     bool logicop() {
         if (tokitr != tokens.end() && (*tokitr == "t_and" || *tokitr == "t_or")) {
@@ -182,8 +196,12 @@ private:
         return false;
     }
 
-    bool arithop();
-    bool relop();
+    bool arithop() {
+        return true;
+    }
+    bool relop() {
+        return true;
+    }
 
 public:
     SyntaxAnalyzer(istream &infile) {
