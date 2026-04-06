@@ -232,9 +232,9 @@ private:
     }
 
     bool logexpr() {
-        if (tokitr != tokens.end() && relexpr()) {
-            while (tokitr != tokens.end() && logicop()) {
-                if (tokitr != tokens.end() && !relexpr()) {
+        if (relexpr()) {
+            while (logicop()) {
+                if (!relexpr()) {
                     return false;
                 }
             }
@@ -273,60 +273,61 @@ private:
         }
         return false;
     }
+
     bool vars() {
-    cout << "[TRACE] Entering vars()." << endl;
-    string varType = type(); // Helper to grab 't_integer' or 't_string'
+        cout << "[TRACE] Entering vars()." << endl;
+        string varType = type();
 
-    if (!varType.empty()) {
-        cout << "[TRACE] Detected type: " << varType << endl;
+        if (!varType.empty()) {
+            cout << "[TRACE] Detected type: " << varType << endl;
 
-        if (tokitr != tokens.end() && *tokitr == "t_id") {
-            // Check for redeclaration on the first variable
-            if (!symboltable.contains(*lexitr)) {
-                cout << "[TRACE] Adding to Symbol Table: " << *lexitr << " (" << varType << ")" << endl;
-                symboltable[*lexitr] = varType;
-                tokitr++;
-                lexitr++;
-            } else {
-                cout << "[ERROR] Semantic Error: Variable '" << *lexitr << "' is already declared." << endl;
-                return false;
-            }
-
-            // Handle multiple variables on one line (e.g., integer x, y, z;)
-            while (tokitr != tokens.end() && *tokitr == "s_comma") {
-                cout << "[TRACE] Found comma, looking for next identifier." << endl;
-                tokitr++;
-                lexitr++;
-
-                if (tokitr != tokens.end() && *tokitr == "t_id") {
-                    if (!symboltable.contains(*lexitr)) {
-                        cout << "[TRACE] Adding to Symbol Table: " << *lexitr << " (" << varType << ")" << endl;
-                        symboltable[*lexitr] = varType;
-                        tokitr++;
-                        lexitr++;
-                    } else {
-                        cout << "[ERROR] Semantic Error: Variable '" << *lexitr << "' is already declared." << endl;
-                        return false;
-                    }
+            if (tokitr != tokens.end() && *tokitr == "t_id") {
+                // Check for redeclaration on the first variable
+                if (!symboltable.contains(*lexitr)) {
+                    cout << "[TRACE] Adding to Symbol Table: " << *lexitr << " (" << varType << ")" << endl;
+                    symboltable[*lexitr] = varType;
+                    tokitr++;
+                    lexitr++;
                 } else {
-                    cout << "[ERROR] Syntax Error: Expected identifier after comma." << endl;
+                    cout << "[ERROR] Semantic Error: Variable '" << *lexitr << "' is already declared." << endl;
                     return false;
                 }
-            }
 
-            // Finish the line with a semicolon
-            if (tokitr != tokens.end() && *tokitr == "s_semi") {
-                cout << "[TRACE] Found semicolon. Variable line complete." << endl;
-                tokitr++;
-                lexitr++;
-                return true;
-            } else {
-                cout << "[ERROR] Syntax Error: Expected ';' at end of variable declaration." << endl;
+                // Handle multiple variables on one line (e.g., integer x, y, z;)
+                while (tokitr != tokens.end() && *tokitr == "s_comma") {
+                    cout << "[TRACE] Found comma, looking for next identifier." << endl;
+                    tokitr++;
+                    lexitr++;
+
+                    if (tokitr != tokens.end() && *tokitr == "t_id") {
+                        if (!symboltable.contains(*lexitr)) {
+                            cout << "[TRACE] Adding to Symbol Table: " << *lexitr << " (" << varType << ")" << endl;
+                            symboltable[*lexitr] = varType;
+                            tokitr++;
+                            lexitr++;
+                        } else {
+                            cout << "[ERROR] Semantic Error: Variable '" << *lexitr << "' is already declared." << endl;
+                            return false;
+                        }
+                    } else {
+                        cout << "[ERROR] Syntax Error: Expected identifier after comma." << endl;
+                        return false;
+                    }
+                }
+
+                // Finish the line with a semicolon
+                if (tokitr != tokens.end() && *tokitr == "s_semi") {
+                    cout << "[TRACE] Found semicolon. Variable line complete." << endl;
+                    tokitr++;
+                    lexitr++;
+                    return true;
+                } else {
+                    cout << "[ERROR] Syntax Error: Expected ';' at end of variable declaration." << endl;
+                }
             }
         }
+        return false;
     }
-    return false;
-}
     string type() {
         if (tokitr != tokens.end() && (*tokitr == "t_integer" || *tokitr == "t_string")) {
             string type = *tokitr;
