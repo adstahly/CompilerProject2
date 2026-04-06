@@ -221,6 +221,8 @@ public:
             lexemes.push_back(lexeme);
             tokens.push_back(token);
         }
+        lexitr = lexemes.begin();
+        tokitr = tokens.begin();
     };
     // pre: 1st parameter consists of an open file containing a source code's
     //	valid scanner/lexical analyzer output.  This data must be in the form: token : lexeme
