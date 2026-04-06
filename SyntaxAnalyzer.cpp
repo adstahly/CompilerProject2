@@ -106,10 +106,26 @@ private:
 }
 
     bool elsepart() {
+        cout << "[TRACE] Entering elsepart(). Current token: " << (tokitr != tokens.end() ? *tokitr : "EOF") << endl;
+
         if (tokitr != tokens.end() && *tokitr == "t_else") {
-            tokitr++; lexitr++;
-            if (tokitr != tokens.end() && stmtlist()) {} else {return false;}
+            cout << "[TRACE] Found 't_else'. Advancing to stmtlist()." << endl;
+            tokitr++;
+            lexitr++;
+
+            // If 'else' exists, it MUST be followed by a valid stmtlist
+            if (tokitr != tokens.end() && stmtlist()) {
+                cout << "[TRACE] Successfully parsed 'else' block stmtlist()." << endl;
+                // Fall through to return true
+            } else {
+                cout << "[ERROR] Syntax Error: Expected stmtlist after 'else'." << endl;
+                return false;
+            }
+        } else {
+            // This is the "Epsilon" path: it's perfectly fine to not have an 'else'
+            cout << "[TRACE] No 'else' found. Skipping elsepart (Epsilon path)." << endl;
         }
+
         return true;
     }
 
@@ -258,31 +274,59 @@ private:
         return false;
     }
     bool vars() {
-        string varType = type();
-        if (tokitr != tokens.end() && !varType.empty()) {
-            if (tokitr != tokens.end() && *tokitr == "t_id") {
-                symboltable[*lexitr] = varType;
-                tokitr++; lexitr++;
-                while (tokitr != tokens.end() && *tokitr == "s_comma") {
-                    tokitr++; lexitr++;
-                    if (tokitr != tokens.end() && *tokitr == "t_id") {
-                        if (!symboltable.contains(*lexitr)) {
-                            symboltable[*lexitr] = varType;
-                            tokitr++; lexitr++;
-                        } else {
-                            return false;
-                        }
-                    }
-                }
-                if (tokitr != tokens.end() && *tokitr == "t_semi") {
-                    tokitr++; lexitr++;
-                    return true;
-                }
+    cout << "[TRACE] Entering vars()." << endl;
+    string varType = type(); // Helper to grab 't_integer' or 't_string'
 
+    if (!varType.empty()) {
+        cout << "[TRACE] Detected type: " << varType << endl;
+
+        if (tokitr != tokens.end() && *tokitr == "t_id") {
+            // Check for redeclaration on the first variable
+            if (!symboltable.contains(*lexitr)) {
+                cout << "[TRACE] Adding to Symbol Table: " << *lexitr << " (" << varType << ")" << endl;
+                symboltable[*lexitr] = varType;
+                tokitr++;
+                lexitr++;
+            } else {
+                cout << "[ERROR] Semantic Error: Variable '" << *lexitr << "' is already declared." << endl;
+                return false;
+            }
+
+            // Handle multiple variables on one line (e.g., integer x, y, z;)
+            while (tokitr != tokens.end() && *tokitr == "s_comma") {
+                cout << "[TRACE] Found comma, looking for next identifier." << endl;
+                tokitr++;
+                lexitr++;
+
+                if (tokitr != tokens.end() && *tokitr == "t_id") {
+                    if (!symboltable.contains(*lexitr)) {
+                        cout << "[TRACE] Adding to Symbol Table: " << *lexitr << " (" << varType << ")" << endl;
+                        symboltable[*lexitr] = varType;
+                        tokitr++;
+                        lexitr++;
+                    } else {
+                        cout << "[ERROR] Semantic Error: Variable '" << *lexitr << "' is already declared." << endl;
+                        return false;
+                    }
+                } else {
+                    cout << "[ERROR] Syntax Error: Expected identifier after comma." << endl;
+                    return false;
+                }
+            }
+
+            // Finish the line with a semicolon
+            if (tokitr != tokens.end() && *tokitr == "s_semi") {
+                cout << "[TRACE] Found semicolon. Variable line complete." << endl;
+                tokitr++;
+                lexitr++;
+                return true;
+            } else {
+                cout << "[ERROR] Syntax Error: Expected ';' at end of variable declaration." << endl;
             }
         }
-        return false;
     }
+    return false;
+}
     string type() {
         if (tokitr != tokens.end() && (*tokitr == "t_integer" || *tokitr == "t_string")) {
             string type = *tokitr;
