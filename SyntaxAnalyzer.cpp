@@ -1,3 +1,4 @@
+//Adam Stahly
 #include <iostream>
 #include <map>
 #include <vector>
@@ -165,7 +166,7 @@ private:
         return true;
     }
 
-    bool numterm() { // write
+    bool numterm() {
         if (tokitr != tokens.end()) {
             if (symboltable.contains(*lexitr)) {
                 if (symboltable[*lexitr] == "t_integer") {
