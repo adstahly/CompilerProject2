@@ -29,7 +29,7 @@ private:
     }
 
     bool vars() {
-        return true;
+        return false;
     }
 
     bool stmtlist() {
