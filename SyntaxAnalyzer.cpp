@@ -54,33 +54,56 @@ private:
 
 
     bool ifstmt() {
-        if (tokitr != tokens.end() && *tokitr == "t_if") {
+    cout << "[TRACE] Entering ifstmt(). Current: " << *tokitr << endl;
+
+    if (tokitr != tokens.end() && *tokitr == "t_if") {
+        tokitr++; lexitr++;
+        if (tokitr != tokens.end() && *tokitr == "s_lparen") {
+            cout << "[TRACE] Found '('. Parsing logical expression..." << endl;
             tokitr++; lexitr++;
-            if (tokitr != tokens.end() && *tokitr == "s_lparen") {
-                tokitr++; lexitr++;
-                if (tokitr != tokens.end() && logexpr()) {
-                    if (tokitr != tokens.end() && *tokitr == "s_rparen") {
+
+            if (tokitr != tokens.end() && logexpr()) {
+                cout << "[TRACE] logexpr() returned true. Looking for ')'." << endl;
+
+                if (tokitr != tokens.end() && *tokitr == "s_rparen") {
+                    tokitr++; lexitr++;
+                    if (tokitr != tokens.end() && *tokitr == "t_then") {
+                        cout << "[TRACE] Found 'then'. Entering stmtlist()." << endl;
                         tokitr++; lexitr++;
-                        if (tokitr != tokens.end() && *tokitr == "t_then") {
-                            tokitr++; lexitr++;
-                            if (tokitr != tokens.end() && stmtlist()) {
-                                if (tokitr != tokens.end() && elsepart()) {
-                                    if (tokitr != tokens.end() && *tokitr == "t_end") {
+
+                        if (tokitr != tokens.end() && stmtlist()) {
+                            cout << "[TRACE] Returned from 'then' block stmtlist(). Checking elsepart()." << endl;
+
+                            if (tokitr != tokens.end() && elsepart()) {
+                                cout << "[TRACE] elsepart() handled. Looking for 'end' of if block." << endl;
+
+                                if (tokitr != tokens.end() && *tokitr == "t_end") {
+                                    tokitr++; lexitr++;
+                                    cout << "[TRACE] Found 'end'. Checking for mandatory trailing 'if'." << endl;
+
+                                    if (tokitr != tokens.end() && *tokitr == "t_if") {
+                                        cout << "[TRACE] Found trailing 'if'. ifstmt() SUCCESS." << endl;
                                         tokitr++; lexitr++;
-                                        if (tokitr != tokens.end() && *tokitr == "t_if") {
-                                            tokitr++; lexitr++;
-                                            return true;
-                                        }
+                                        return true;
+                                    } else {
+                                        cout << "[ERROR] ifstmt expected 'if' after 'end', found: " << (tokitr != tokens.end() ? *tokitr : "EOF") << endl;
                                     }
+                                } else {
+                                    cout << "[ERROR] ifstmt expected 'end', found: " << (tokitr != tokens.end() ? *tokitr : "EOF") << endl;
                                 }
                             }
                         }
+                    } else {
+                        cout << "[ERROR] ifstmt expected 'then', found: " << (tokitr != tokens.end() ? *tokitr : "EOF") << endl;
                     }
+                } else {
+                    cout << "[ERROR] ifstmt expected ')', found: " << (tokitr != tokens.end() ? *tokitr : "EOF") << endl;
                 }
             }
         }
-        return false;
     }
+    return false;
+}
 
     bool elsepart() {
         if (tokitr != tokens.end() && *tokitr == "t_else") {
@@ -300,24 +323,60 @@ private:
         return false;
     }
     bool arithexpr() {
-        tokitr++; lexitr++;
-        return true;
+        if (numterm()) {
+            while (arithop()) {
+                if (!numterm()) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
     }
     bool relexpr() {
-        tokitr++; lexitr++;
-        return true;
+        cout << "[TRACE] Entering relexpr()" << endl;
+        if (arithexpr()) {
+            if (relop()) {
+                if (arithexpr()) {
+                    cout << "[TRACE] relexpr() SUCCESS" << endl;
+                    return true;
+                }
+            }
+        }
+        return false;
     }
     bool strterm() {
         tokitr++; lexitr++;
         return true;
     }
-    bool arithop() {
-        tokitr++; lexitr++;
-        return true;
-    }
     bool relop() {
-        tokitr++; lexitr++;
-        return true;
+        if (tokitr != tokens.end()) {
+            string lex = *lexitr;
+            if (lex == ">" || lex == "<") {
+                tokitr++; lexitr++;
+                if (tokitr != tokens.end() && *lexitr == "=") {
+                    tokitr++; lexitr++;
+                }
+                return true;
+            }
+            if (lex == "!" || lex == "=") {
+                tokitr++; lexitr++;
+                if (tokitr != tokens.end() && *lexitr == "=") {
+                    tokitr++; lexitr++;
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    bool arithop() {
+        if (tokitr != tokens.end()) {
+            if (string lex = *lexitr; lex == "+" || lex == "-" || lex == "*" || lex == "/" || lex == "%") {
+                tokitr++; lexitr++;
+                return true;
+            }
+        }
+        return false;
     }
 
 public:
