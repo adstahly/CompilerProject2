@@ -29,11 +29,11 @@ private:
     }
 
     bool vars() {
-        return false;
+        return true;
     }
 
     bool stmtlist() {
-        if (tokitr != tokens.end()) {
+        if (tokitr != tokens.end() && *tokitr != "t_end") {
             int status = stmt();
             while (tokitr != tokens.end() && status == 1) {
                 status = stmt();
@@ -98,9 +98,9 @@ private:
             if (tokitr != tokens.end() && *tokitr == "s_assign") {
                 tokitr++;
                 lexitr++;
-                if (tokitr != tokens.end() && type == "t_integer") {
+                if (type == "t_integer") {
                     if (!arithexpr()) return false;
-                } else if (tokitr != tokens.end() && type == "t_string") {
+                } else if (type == "t_string") {
                     if (!strterm()) return false;
                 }
                 if (tokitr != tokens.end() && *tokitr == "s_semi") {
@@ -242,9 +242,12 @@ public:
                 lexitr++;
                 if (stmtlist()) {
                     // check for end
-                    if (tokitr == tokens.end() && *tokitr == "t_end") {
-                        for (auto const& [id, type] : symboltable) {
-                            cout << id << " " << type << endl;
+                    if (tokitr != tokens.end() && *tokitr == "t_end") {
+                        tokitr++; lexitr++;
+                        if (tokitr == tokens.end()) {
+                            for (auto const& [id, type] : symboltable) {
+                                cout << id << " " << type << endl;
+                            }
                         }
                         return true;
                     }
