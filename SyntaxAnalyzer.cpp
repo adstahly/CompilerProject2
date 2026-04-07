@@ -14,42 +14,40 @@ private:
     map<string, string> symboltable;
 
     // other private methods
-    bool vdec() {
-        if (tokitr != tokens.end() && *tokitr == "var") {
-            tokitr++;
-            lexitr++;
-            int var;
-            var = vars();
-            return true;
-        }
-        return false;
-    }
+    bool vdec();
 
     bool vars() {
         // includes type
         string type;
         bool error = false;
-        // TODO: continue statement with ','
-        while (tokitr != tokens.end() && (*tokitr == "t_integer" || *tokitr == "t_string") && !error) {
-            if (*lexitr == "t_integer") {
-                type = "integer";
+        if (tokitr != tokens.end() && (*tokitr == "t_integer" || *tokitr == "t_string")) {
+            if (*tokitr == "t_integer") {
+                type = "t_integer";
             } else {
-                type = "string";
+                type = "t_string";
             }
-            tokitr++;
-            lexitr++;
-            while (tokitr != tokens.end() && *tokitr == "t_id") {
-                if (tokitr != tokens.end()) {
-                    if (symboltable.contains(*lexitr)) {
-                        if (symboltable[*lexitr] == type) {
-                            tokitr++;
-                            lexitr++;
-                        } else error = true;
-                    } else {
-                        symboltable[*lexitr] = type;
-                    }
-                } else error = true;
-            }
+            tokitr++; lexitr++;
+            if (tokitr != tokens.end() && *tokitr == "t_id") {
+                if (symboltable.contains(*lexitr)) {
+                    if (symboltable[*lexitr] == type) {
+                        tokitr++; lexitr++;
+                    } else error = true;
+                } else {
+                    symboltable[*lexitr] = type;
+                }
+            } else error = true;
+        }
+        while (tokitr != tokens.end() || *tokitr == "s_comma") {
+            tokitr++; lexitr++;
+            if (tokitr != tokens.end() && *tokitr == "t_id") {
+                if (symboltable.contains(*lexitr)) {
+                    if (symboltable[*lexitr] == type) {
+                        tokitr++; lexitr++;
+                    } else error = true;
+                } else {
+                    symboltable[*lexitr] = type;
+                }
+            } else error = true;
         }
         if (error) return false;
         return true;
@@ -73,19 +71,19 @@ private:
 
     bool whilestmt() {
         // write
-        if (tokitr != tokens.end() && *lexitr == "while") {
+        if (tokitr != tokens.end() && *tokitr == "t_while") {
             tokitr++; lexitr++;
-            if (tokitr != tokens.end() && *lexitr == "(") {
+            if (tokitr != tokens.end() && *tokitr == "s_lparen") {
                 tokitr++; lexitr++;
                 if (expr()) {
-                    if (tokitr != tokens.end() && *lexitr == ")") {
+                    if (tokitr != tokens.end() && *tokitr == "s_rparen") {
                         tokitr++; lexitr++;
-                        if (tokitr != tokens.end() && *lexitr == "loop") {
+                        if (tokitr != tokens.end() && *tokitr == "t_loop") {
                             tokitr++; lexitr++;
                             if (stmtlist()) {
-                                if (tokitr != tokens.end() && *lexitr == "end") {
+                                if (tokitr != tokens.end() && *tokitr == "t_end") {
                                     tokitr++; lexitr++;
-                                    if (tokitr != tokens.end() && *lexitr == "loop") {
+                                    if (tokitr != tokens.end() && *tokitr == "t_loop") {
                                         tokitr++; lexitr++;
                                         return true;
                                     }
@@ -101,14 +99,17 @@ private:
 
     bool assignstmt();
 
-    bool inputstmt(){ // write
-        if (tokitr != tokens.end() && *lexitr == "input") {
-            tokitr++; lexitr++;
-            if (tokitr != tokens.end() && *lexitr == "(") {
-                tokitr++; lexitr++;
+    bool inputstmt() {
+        // write
+        if (tokitr != tokens.end() && *tokitr == "t_input") {
+            tokitr++;
+            lexitr++;
+            if (tokitr != tokens.end() && *tokitr == "s_lparen") {
+                tokitr++;
+                lexitr++;
                 if (tokitr != tokens.end() && symboltable.contains(*lexitr)) {
                     tokitr++; lexitr++;
-                    if (tokitr != tokens.end() && *lexitr == ")") {
+                    if (tokitr != tokens.end() && *tokitr == "s_rparen") {
                         tokitr++; lexitr++;
                         return true;
                     }
@@ -117,63 +118,45 @@ private:
         }
         return false;
     };
+
     bool outputstmt();
 
     bool expr();
 
     bool simpleexpr();
 
-    bool numterm() { // write
+    bool numterm();
+
+    bool strterm() {
         if (tokitr != tokens.end()) {
             if (symboltable.contains(*lexitr)) {
-                if (symboltable[*lexitr] == "t_integer") {
+                if (symboltable[*lexitr] == "t_string") {
                     tokitr++; lexitr++;
                     return true;
                 }
             }
-            string num = *lexitr;
-            for (int i = 0; i < num.length(); i++) {
-                if (!isalpha(num[i])) {
-                    return false;
-                }
+            if (*tokitr == "t_text") {
+                tokitr++; lexitr++;
+                return true;
             }
-            return true;
         }
         return false;
     };
-    bool strterm();
 
     bool logicop();
 
-    bool arithop(){ // write
+    bool relop() {
         if (tokitr != tokens.end()) {
-            string lex = *lexitr;
-            if (lex == ">" || lex == "<") {
+            string tok = *tokitr;
+            if (tok == "s_lt" || tok == "s_le" || tok == "s_gt" || tok == "s_ge" || tok == "s_eq" || tok == "s_ne") {
                 tokitr++; lexitr++;
-                if (tokitr != tokens.end() && *lexitr == "=") {
-                    tokitr++; lexitr++;
-                }
                 return true;
-            }
-            if (lex == "!" || lex == "=") {
-                tokitr++; lexitr++;
-                if (tokitr != tokens.end() && *lexitr == "=") {
-                    tokitr++; lexitr++;
-                    return true;
-                }
             }
         }
         return false;
     }
-    bool relop() {// write
-        if (tokitr != tokens.end()) {
-            string lex = *lexitr;
-            if (lex == "+" || lex == "-" || lex == "*" || lex == "/" || lex == "%") {
-                return true;
-            }
-            return false;
-        }
-    };
+
+    bool arithop();
 
 public:
     SyntaxAnalyzer(istream &infile) {
@@ -209,12 +192,11 @@ public:
         // sentence structure -> VDEC main STMTLIST end
         if (vdec()) {
             // check for main
-            if (tokitr != tokens.end() && *tokitr == "main") {
-                tokitr++;
-                lexitr++;
+            if (tokitr != tokens.end() && *tokitr == "t_main") {
+                tokitr++; lexitr++;
                 if (stmtlist()) {
                     // check for end
-                    if (tokitr == tokens.end() && *tokitr == "end") {
+                    if (tokitr == tokens.end() && *tokitr == "t_end") {
                         return true;
                     }
                     return true;
