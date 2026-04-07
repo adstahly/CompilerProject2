@@ -1,3 +1,4 @@
+#include <fstream>
 #include <iostream>
 #include <map>
 #include <vector>
@@ -364,3 +365,17 @@ public:
         return false;
     };
 };
+
+int main() {
+    ifstream infile("input.txt");
+    if (!infile) {
+        cout << "Error opening file" << endl;
+        return 1;
+    }
+
+    if (SyntaxAnalyzer syntax_analyzer(infile); syntax_analyzer.parse()) {
+        cout << "Input is Valid" << endl;
+    }
+
+    return 0;
+}
