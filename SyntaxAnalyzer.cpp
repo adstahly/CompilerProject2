@@ -46,10 +46,11 @@ private:
                     } else error = true;
                 } else {
                     symboltable[*lexitr] = type;
+                    tokitr++; lexitr++;
                 }
             } else error = true;
         }
-        while (tokitr != tokens.end() || *tokitr == "s_comma") {
+        while (tokitr != tokens.end() && *tokitr == "s_comma") {
             tokitr++; lexitr++;
             if (tokitr != tokens.end() && *tokitr == "t_id") {
                 if (symboltable.contains(*lexitr)) {
@@ -58,6 +59,7 @@ private:
                     } else error = true;
                 } else {
                     symboltable[*lexitr] = type;
+                    tokitr++; lexitr++;
                 }
             } else error = true;
         }
@@ -246,7 +248,7 @@ private:
         bool cont = true;
         if (numterm()) {
             while (cont) {
-                if (arithexpr()) {
+                if (arithop()) {
                     if (!numterm()) {
                         return false;
                     }
@@ -314,7 +316,12 @@ private:
         return false;
     }
 
-    bool arithop();
+    bool arithop() {
+        if (tokitr != tokens.end()) {
+            string tok = *tokitr;
+            if (tok == "s_plus" || tok == "s_minus" || tok == "s_mult" || tok == "s_div" || tok == "s_mod") {}
+        }
+    };
 
 public:
     SyntaxAnalyzer(istream &infile) {
