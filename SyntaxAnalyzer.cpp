@@ -1,3 +1,5 @@
+//Adam Stahly
+//Derek Schober
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -15,75 +17,72 @@ private:
     map<string, string> symboltable;
 
     // other private methods
-        bool vdec() {
-            if (tokitr != tokens.end() && *tokitr == "t_var") {
-                tokitr++;
-                lexitr++;
-                if (tokitr != tokens.end() && vars()) {
-                    while (tokitr != tokens.end() && vars()) {}
-                } else {
-                    return false;
-                }
+    bool vdec() {
+        if (tokitr != tokens.end() && *tokitr == "t_var") {
+            tokitr++;
+            lexitr++;
+            if (tokitr != tokens.end() && vars()) {
+                while (tokitr != tokens.end() && vars()) {}
+                return true;
             }
-            return true;
-        };
+            return false;
+        }
+        return true;
+    };
 
     bool vars() {
         // includes type
-        string type;
-        bool error = false;
+        string type = "";
+
         if (tokitr != tokens.end() && (*tokitr == "t_integer" || *tokitr == "t_string")) {
-            if (*tokitr == "t_integer") {
-                type = "t_integer";
-            } else {
-                type = "t_string";
+            type = *tokitr;
+            tokitr++;
+            lexitr++;
+        } else
+            return false;
+        if (tokitr != tokens.end() && *tokitr == "t_id") {
+            if (!symboltable.contains(*lexitr)) {
+                symboltable[*lexitr] = type;
+                tokitr++;
+                lexitr++;
+            } else
+                return false;
+            while (tokitr != tokens.end() && *tokitr == "s_comma") {
+                tokitr++;
+                lexitr++;
+                if (tokitr != tokens.end() && *tokitr == "t_id") {
+                    if (!symboltable.contains(*lexitr)) {
+                        symboltable[*lexitr] = type;
+                        tokitr++; lexitr++;
+                    } else
+                        return false;
+                }
             }
-            tokitr++; lexitr++;
-            if (tokitr != tokens.end() && *tokitr == "t_id") {
-                if (symboltable.contains(*lexitr)) {
-                    if (symboltable[*lexitr] == type) {
-                        tokitr++; lexitr++;
-                    } else error = true;
-                } else {
-                    symboltable[*lexitr] = type;
-                    tokitr++; lexitr++;
-                }
-            } else error = true;
         }
-        while (tokitr != tokens.end() && *tokitr == "s_comma") {
-            tokitr++; lexitr++;
-            if (tokitr != tokens.end() && *tokitr == "t_id") {
-                if (symboltable.contains(*lexitr)) {
-                    if (symboltable[*lexitr] == type) {
-                        tokitr++; lexitr++;
-                    } else error = true;
-                } else {
-                    symboltable[*lexitr] = type;
-                    tokitr++; lexitr++;
-                }
-            } else error = true;
+        if (tokitr != tokens.end() && *tokitr == "s_semi") {
+            tokitr++;
+            lexitr++;
+            return true;
         }
-        if (error) return false;
         return true;
     };
 
     bool stmtlist() {
-        if (tokitr != tokens.end() && *tokitr != "t_end") {
-            bool status = stmt();
-            while (tokitr != tokens.end() && status) {
-                status = stmt();
-            }
+        while (tokitr != tokens.end() && *tokitr != "t_end" && *tokitr != "t_else") {
+
+            if (!stmt())
+                return false;
         }
         return true;
-    };
+    }
 
     bool stmt() {
-        // write
-        if (ifstmt()) return true;
-        if (whilestmt()) return true;
-        if (assignstmt()) return true;
-        if (inputstmt()) return true;
-        if (outputstmt()) return true;
+        if (tokitr == tokens.end()) return false;
+        if (*tokitr == "t_if") return ifstmt();
+        if (*tokitr == "t_while") return whilestmt();
+        if (*tokitr == "t_id") return assignstmt();
+        if (*tokitr == "t_input") return inputstmt();
+        if (*tokitr == "t_output") return outputstmt();
         return false;
     };
 
@@ -125,7 +124,6 @@ private:
     };
 
     bool whilestmt() {
-        // write
         if (tokitr != tokens.end() && *tokitr == "t_while") {
             tokitr++; lexitr++;
             if (tokitr != tokens.end() && *tokitr == "s_lparen") {
@@ -176,7 +174,6 @@ private:
     };
 
     bool inputstmt() {
-        // write
         if (tokitr != tokens.end() && *tokitr == "t_input") {
             tokitr++;
             lexitr++;
@@ -203,12 +200,13 @@ private:
                 tokitr++;
                 lexitr++;
 
-                auto bookmark = tokitr;
+                auto bookmarkTok = tokitr;
+                auto bookmarkLex = lexitr;
 
                 if (tokitr != tokens.end() && numterm()) {
                 } else {
-                    tokitr = bookmark;
-                    lexitr = bookmark;
+                    tokitr = bookmarkTok;
+                    lexitr = bookmarkLex;
                     if (!strterm()) {
                         return false;
                     }
@@ -244,20 +242,14 @@ private:
     };
 
     bool arithexpr() {
-        int ctr = 0;
-        bool cont = true;
         if (numterm()) {
-            while (cont) {
-                if (arithop()) {
-                    if (!numterm()) {
-                        return false;
-                    }
-                    ctr++;
-                }else cont = false;
+            while (arithop()) {
+                if (!numterm()) {
+                    return false;
+                }
             }
-        }
-        if (ctr > 0)
             return true;
+        }
         return false;
     }
 
@@ -319,8 +311,12 @@ private:
     bool arithop() {
         if (tokitr != tokens.end()) {
             string tok = *tokitr;
-            if (tok == "s_plus" || tok == "s_minus" || tok == "s_mult" || tok == "s_div" || tok == "s_mod") {}
+            if (tok == "s_plus" || tok == "s_minus" || tok == "s_mult" || tok == "s_div" || tok == "s_mod") {
+                tokitr++; lexitr++;
+                return true;
+            }
         }
+        return false;
     };
 
 public:
@@ -328,8 +324,8 @@ public:
         lexemes.clear();
         tokens.clear();
         string lexeme, token, line;
-        int idx = -1;
         while (getline(infile, line)) {
+            int idx = -1;
             for (int i = 0; i < line.length(); i++) {
                 if (line[i] == ' ') {
                     idx = i;
@@ -341,6 +337,8 @@ public:
             lexemes.push_back(lexeme);
             tokens.push_back(token);
         }
+        lexitr = lexemes.begin();
+        tokitr = tokens.begin();
     };
     // pre: 1st parameter consists of an open file containing a source code's
     //	valid scanner/lexical analyzer output.  This data must be in the form: token : lexeme
@@ -360,25 +358,26 @@ public:
             if (tokitr != tokens.end() && *tokitr == "t_main") {
                 tokitr++; lexitr++;
                 if (stmtlist()) {
-                    // check for end
-                    if (tokitr == tokens.end() && *tokitr == "t_end") {
-                        return true;
+                    if (tokitr != tokens.end() && *tokitr == "t_end") {
+                        tokitr++; lexitr++;
+                        if (tokitr == tokens.end()) {
+                            for (auto const& [id, type] : symboltable) {
+                                cout << id << " " << type << endl;
+                            }
+                            return true;
+                        }
                     }
-                    return true;
                 }
             }
         }
-        cout << "error: " << *lexitr << " " << *tokitr << endl;
+        cout << "Error at Line: " << *lexitr << " " << *tokitr << endl;
         return false;
     };
 };
 
 int main() {
-    ifstream infile("input.txt");
-    if (!infile) {
-        cout << "Error opening file" << endl;
-        return 1;
-    }
+    ifstream infile("./input.txt");
+
 
     if (SyntaxAnalyzer syntax_analyzer(infile); syntax_analyzer.parse()) {
         cout << "Input is Valid" << endl;
